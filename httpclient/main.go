@@ -6,7 +6,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os/exec"
+	"strings"
 )
 
 // API structs
@@ -50,26 +53,33 @@ func createURL(token string, env string, message apiMsg) {
 		prodURL string = "https://api.tastyworks.com/"
 	)
 
-	if env == "sbx" {
-		requestURL := sbxURL + message.msg
-		fmt.Println(requestURL)
-		apiCall(token, requestURL, "GET")
+	// default to sbx API endpoint for safety
+	baseURL := sbxURL
+
+	if env == "prod" {
+		baseURL = prodURL
 	}
+
+	base, err := url.Parse((baseURL))
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	base.Path += message.msg
+	fmt.Println(base.String())
+	apiCall(token, base.String(), "GET")
 
 }
 
 func apiCall(token string, requestURL string, request string) {
-
-	// // requestURL := "https://api.cert.tastyworks.com/customers/me"
-	// req, err := http.NewRequest(http.MethodGet, requestURL, nil)
-
-	fmt.Printf("token at client: %s\n", token)
 
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 
 	if err != nil {
 		log.Fatalf("client: could not create request: %s\n", err)
 	}
+
+	token = strings.TrimSuffix(token, "\n")
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
@@ -86,6 +96,15 @@ func apiCall(token string, requestURL string, request string) {
 	// // client := &http.Client{
 	// // 	Timeout: 10 * time.Second,
 	// // }
+
+	// debug http call
+	reqDump, err := httputil.DumpRequestOut(req, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("REQUEST:\n%s", string(reqDump))
+	// end debug
 
 	res, err := client.Do(req)
 
@@ -116,7 +135,7 @@ func main() {
 	fmt.Printf("Hello %s here's your session token: %s\n", username, token)
 
 	// get my account info
-	accountInfo := apiMsg{method: "GET", msg: "customer/me"}
+	accountInfo := apiMsg{method: "GET", msg: "customers/me"}
 
 	createURL(token, env, accountInfo)
 
