@@ -26,7 +26,8 @@ I'm using 1Password to store my credentials and using the [1Password CLI](https:
 | ------- | ----------- |
 |`tasty login env [sbx \| prod] <username>`| Gets session and remember tokens for environment. Defaults to `sbx` environment |
 | `tasty logout` | Deactivates your session and remember tokens |
-| `tasty me` | Gets a list of your customer accounts |
+| `tasty me` | Your customer information |
+| `tasty accounts` | List of your customer accounts |
 | `tasty set-account` | Sets the account id that you want to interact with in subsequent commands
 | `tasty get-account` | Returns the account number you set previously
 | `tasty positions <account_number>` | Gets a list of your account postions. You must reference an account number if you haven't set one using `tasty set-account` |
