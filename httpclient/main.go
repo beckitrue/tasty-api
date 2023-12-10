@@ -2,32 +2,64 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
 	"os/exec"
 	"strings"
 )
 
-// API structs
-type apiMsg struct {
+// 1 Password secret references
+const (
+	op               = "/usr/bin/op"
+	sbxVaultUser     = "op://Private/tastytrade-sbx-api/username"
+	sbxVaultToken    = "op://Private/tastytrade-sbx-api/credential"
+	sbxRememberToken = "op://Private/tastytrade-sbx-api/remember"
+)
+
+type ApiMsg struct {
 	method string
 	msg    string
+}
+
+type Context struct {
+	context string
+}
+
+type Account struct {
+	DayTraderSttatus      bool   `json:"day-trader-status"`
+	FuturesAccountPurpose string `json:"futures-account-purpose"`
+	LiquidityNeeds        string `;son:"liquidity-needs"`
+	AccountNumber         string `json:"account-number"`
+	// nickname	string
+	// suitable-options-level	string
+	// risk-tolerance	string
+	// is-closed	bool
+	// is-foreign	bool
+	// is-test-drive	bool
+	// is-firm-proprietary	bool
+	// closed-at	string
+	// investment-time-horizon	string
+	// ext-crm-id	string
+	// submitting-user-id	string
+	// opened-at	string
+	// is-futures-approved	bool
+	// created-at	string
+	// external-fdid	string
+	// is-firm-error	bool
+	// external-id	string
+	// funding-date	string
+	// account-type-name	string
+	// margin-or-cash	string
+	// investment-objective string
 }
 
 func getCreds() (string, string) {
 	// get the credentials for the Tastytrade API stored in
 	// 1Password Vault
-
-	// set the values for 1Password CLI secret references
-	const (
-		op            = "/usr/bin/op"
-		sbxVaultUser  = "op://Private/tastytrade-sbx-api/username"
-		sbxVaultToken = "op://Private/tastytrade-sbx-api/credential"
-	)
 	user_ref, err := exec.Command(op, "read", sbxVaultUser).Output()
 
 	if err != nil {
@@ -42,11 +74,13 @@ func getCreds() (string, string) {
 
 	username := string(user_ref[:])
 	token := string(token_ref[:])
+	// trim the new line from the token value before returning
+	token = strings.TrimSuffix(token, "\n")
 
 	return username, token
 }
 
-func createURL(token string, env string, message apiMsg) {
+func createURL(env string, endpoint string) (url string) {
 
 	const (
 		sbxURL  string = "https://api.cert.tastyworks.com/"
@@ -60,18 +94,13 @@ func createURL(token string, env string, message apiMsg) {
 		baseURL = prodURL
 	}
 
-	base, err := url.Parse((baseURL))
-	if err != nil {
-		log.Print(err)
-		return
-	}
-	base.Path += message.msg
-	fmt.Println(base.String())
-	apiCall(token, base.String(), "GET")
+	baseURL += endpoint
+
+	return baseURL
 
 }
 
-func apiCall(token string, requestURL string, request string) {
+func apiCall(token string, requestURL string, request string) (jstring string) {
 
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 
@@ -79,8 +108,7 @@ func apiCall(token string, requestURL string, request string) {
 		log.Fatalf("client: could not create request: %s\n", err)
 	}
 
-	token = strings.TrimSuffix(token, "\n")
-
+	// set header values
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("User-Agent", "my-custom-client/2.0")
@@ -91,11 +119,10 @@ func apiCall(token string, requestURL string, request string) {
 		InsecureSkipVerify: true,
 	}
 	tr := &http.Transport{TLSClientConfig: &config}
-	client := &http.Client{Transport: tr}
-
-	// // client := &http.Client{
-	// // 	Timeout: 10 * time.Second,
-	// // }
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   10 * tr.IdleConnTimeout,
+	}
 
 	// debug http call
 	reqDump, err := httputil.DumpRequestOut(req, true)
@@ -103,7 +130,7 @@ func apiCall(token string, requestURL string, request string) {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("REQUEST:\n%s", string(reqDump))
+	log.Printf("REQUEST:\n%s", string(reqDump))
 	// end debug
 
 	res, err := client.Do(req)
@@ -112,31 +139,46 @@ func apiCall(token string, requestURL string, request string) {
 		log.Fatalf("client: error making http request: %s\n", err)
 	}
 
-	fmt.Printf("client: got response!\n")
-	fmt.Printf("client: status code: %d\n", res.StatusCode)
+	log.Printf("client: status code: %d\n", res.StatusCode)
 
 	resBody, err := io.ReadAll(res.Body)
+
 	if err != nil {
 		log.Fatalf("client: could not read response body: %s\n", err)
 	}
-	fmt.Printf("client: response body: %s\n", resBody)
+
+	if !json.Valid([]byte(resBody)) {
+		log.Print("invalid JSON string returned: ", resBody)
+		return
+	}
+
+	fmt.Println(string(resBody))
+
+	return (string(resBody))
 
 }
 
 func main() {
 
+	// setting env to sbx for safety while developing and testing
 	const (
 		env = "sbx"
 	)
 
-	// get session token
+	// get session token from 1Password
 	username, token := getCreds()
-
 	fmt.Printf("Hello %s here's your session token: %s\n", username, token)
 
-	// get my account info
-	accountInfo := apiMsg{method: "GET", msg: "customers/me"}
+	// command list - we'll use cli args eventually
+	// accountInfo := apiMsg{method: "GET", msg: "customers/me"}
+	accountList := ApiMsg{method: "GET", msg: "customers/me/accounts"}
 
-	createURL(token, env, accountInfo)
+	cmd := accountList
+	log.Printf("running command: %s", cmd)
+
+	url := createURL(env, cmd.msg)
+
+	response := apiCall(token, url, cmd.method)
+	fmt.Println(response)
 
 }
