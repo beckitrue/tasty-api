@@ -29,32 +29,30 @@ type Context struct {
 	context string
 }
 
-type Account struct {
-	DayTraderSttatus      bool   `json:"day-trader-status"`
-	FuturesAccountPurpose string `json:"futures-account-purpose"`
-	LiquidityNeeds        string `;son:"liquidity-needs"`
-	AccountNumber         string `json:"account-number"`
-	// nickname	string
-	// suitable-options-level	string
-	// risk-tolerance	string
-	// is-closed	bool
-	// is-foreign	bool
-	// is-test-drive	bool
-	// is-firm-proprietary	bool
-	// closed-at	string
-	// investment-time-horizon	string
-	// ext-crm-id	string
-	// submitting-user-id	string
-	// opened-at	string
-	// is-futures-approved	bool
-	// created-at	string
-	// external-fdid	string
-	// is-firm-error	bool
-	// external-id	string
-	// funding-date	string
-	// account-type-name	string
-	// margin-or-cash	string
-	// investment-objective string
+type Accounts struct {
+	Data struct {
+		Items []struct {
+			Account struct {
+				AccountNumber        string `json:"account-number"`
+				OpenedAt             string `json:"opened-at"`
+				Nickname             string `json:"nickname"`
+				AccountTypeName      string `json:"account-type-name"`
+				DayTraderStatus      bool   `json:"day-trader-status"`
+				IsClosed             bool   `json:"is-closed"`
+				IsFirmError          bool   `json:"is-firm-error"`
+				IsFirmProprietary    bool   `json:"is-firm-proprietary"`
+				IsFuturesApproved    bool   `json:"is-futures-approved"`
+				IsTestDrive          bool   `json:"is-test-drive"`
+				MarginOrCash         string `json:"margin-or-cash"`
+				IsForeign            bool   `json:"is-foreign"`
+				InvestmentObjective  string `json:"investment-objective"`
+				SuitableOptionsLevel string `json:"suitable-options-level"`
+				CreatedAt            string `json:"created-at"`
+			} `json:"account"`
+			AuthorityLevel string `json:"authority-level"`
+		} `json:"items"`
+	} `json:"data"`
+	Context string `json:"context"`
 }
 
 func getCreds() (string, string) {
@@ -100,7 +98,7 @@ func createURL(env string, endpoint string) (url string) {
 
 }
 
-func apiCall(token string, requestURL string, request string) (jstring string) {
+func apiCall(token string, requestURL string, request string) string {
 
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 
@@ -143,19 +141,35 @@ func apiCall(token string, requestURL string, request string) (jstring string) {
 
 	resBody, err := io.ReadAll(res.Body)
 
+	// do some error checking on the response
 	if err != nil {
 		log.Fatalf("client: could not read response body: %s\n", err)
 	}
 
 	if !json.Valid([]byte(resBody)) {
 		log.Print("invalid JSON string returned: ", resBody)
-		return
+		return (string(resBody))
 	}
-
-	fmt.Println(string(resBody))
 
 	return (string(resBody))
 
+}
+
+func getJson(data string) {
+
+	dec := json.NewDecoder(strings.NewReader(data))
+	for {
+		var accounts Accounts
+		if err := dec.Decode(&accounts); err == io.EOF {
+			break
+		} else if err != nil {
+			log.Fatal(err)
+		}
+		// loop through the number items
+		for i := range accounts.Data.Items {
+			fmt.Printf("Account %d: %s\n", i, accounts.Data.Items[i].Account.AccountNumber)
+		}
+	}
 }
 
 func main() {
@@ -178,7 +192,9 @@ func main() {
 
 	url := createURL(env, cmd.msg)
 
-	response := apiCall(token, url, cmd.method)
-	fmt.Println(response)
+	resString := apiCall(token, url, cmd.method)
+	fmt.Println(resString)
+
+	getJson(resString)
 
 }
