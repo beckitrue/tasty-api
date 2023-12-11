@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// struct created from https://mholt.github.io/json-to-go/
 type Accounts struct {
 	Data struct {
 		Items []struct {
@@ -46,7 +47,7 @@ func PrintDataAccounts(data string) {
 		// loop through the items and print the account numbers
 		// TODO: include more information in the output
 		for i := range accounts.Data.Items {
-			fmt.Printf("Account %d: %s\n", i, accounts.Data.Items[i].Account.AccountNumber)
+			fmt.Printf("Account %d: %s\tIs Closed: %t\n", i, accounts.Data.Items[i].Account.AccountNumber, accounts.Data.Items[i].Account.IsClosed)
 		}
 	}
 }
