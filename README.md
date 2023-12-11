@@ -14,7 +14,7 @@ I'm using 1Password to store my credentials and using the [1Password CLI](https:
 
 ## Session flow
 
-1. Login to your 1Password account
+1. Login to your 1Password desktop application
 1. Run `tasty login env [sbx \| prod] <username>` to login. Your credentials will be saved to your 1Password vault
 1. Run `tasty me` to verify that you've logged in sucessfully, and to see a list of your accounts
 1. You're set to interact with your accounts using any of the commands below

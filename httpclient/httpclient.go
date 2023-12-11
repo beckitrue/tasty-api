@@ -32,6 +32,7 @@ func CreateURL(env string, endpoint string) (url string) {
 
 func ApiCall(token string, requestURL string, request string) string {
 
+	// TODO: logic for Method selection based on func input params
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 
 	if err != nil {

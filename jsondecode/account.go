@@ -44,6 +44,7 @@ func PrintDataAccounts(data string) {
 			log.Fatal(err)
 		}
 		// loop through the items and print the account numbers
+		// TODO: include more information in the output
 		for i := range accounts.Data.Items {
 			fmt.Printf("Account %d: %s\n", i, accounts.Data.Items[i].Account.AccountNumber)
 		}
