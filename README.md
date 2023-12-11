@@ -5,7 +5,7 @@ I'm experimenting with the [Tasty Trade Open API](https://support.tastyworks.com
 * Use the Tasty Trade API to look for trading opportunities by automating some of the evaluation criteria I do manually
 * Learn to write go code
 
-Go is compiled, so it should be portable and able to run on most computers. The 1Password implentation is a bit trickier, and less universal. I'll get that to work in my environment and leave the porability for later.
+Go is compiled, so it should be portable and able to run on most computers. The 1Password implentation is a bit trickier, and less universal. I'll get that to work in my environment and leave the portability for later.
 
 ## Security
 
