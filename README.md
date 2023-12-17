@@ -24,7 +24,7 @@ I'm using 1Password to store my credentials and using the [1Password CLI](https:
 
 | Command | Description |
 | ------- | ----------- |
-|`tasty login env [sbx \| prod] <username>`| Gets session and remember tokens for environment. Defaults to `sbx` environment |
+|`tasty login env [sbx \| prod]`| Gets session and remember tokens for environment. Defaults to `sbx` environment |
 | `tasty logout` | Deactivates your session and remember tokens |
 | `tasty me` | Your customer information |
 | `tasty accounts` | List of your customer accounts |
