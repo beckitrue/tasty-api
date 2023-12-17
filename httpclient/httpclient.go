@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/http/httputil"
 )
 
 func CreateURL(env string, endpoint string) (url string) {
@@ -55,14 +54,15 @@ func ApiCall(token string, requestURL string, request string) string {
 		Timeout:   10 * tr.IdleConnTimeout,
 	}
 
-	// debug http call
-	reqDump, err := httputil.DumpRequestOut(req, true)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// TODO: Debug
+	// // debug http call
+	// reqDump, err := httputil.DumpRequestOut(req, true)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	log.Printf("REQUEST:\n%s", string(reqDump))
-	// end debug
+	// log.Printf("REQUEST:\n%s", string(reqDump))
+	// // end debug
 
 	res, err := client.Do(req)
 
