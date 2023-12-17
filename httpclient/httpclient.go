@@ -81,7 +81,6 @@ func ApiCall(token string, requestURL string, request string) string {
 
 	if !json.Valid([]byte(resBody)) {
 		log.Print("invalid JSON string returned: ", resBody)
-		return (string(resBody))
 	}
 
 	return (string(resBody))

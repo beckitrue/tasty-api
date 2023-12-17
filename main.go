@@ -8,6 +8,11 @@ import (
 	"log"
 )
 
+const (
+	sbxVaultUser  = "op://Private/tastytrade-sbx-api/username"
+	sbxVaultToken = "op://Private/tastytrade-sbx-api/credential"
+)
+
 type ApiMsg struct {
 	method string
 	msg    string
@@ -16,12 +21,17 @@ type ApiMsg struct {
 
 func main() {
 
-	// setting env to sbx for safety during testing
+	// // setting env to sbx for safety during testing
 	env := "sbx"
 
+	// login to TastyTrade to get the session token
+	// and save it to 1Password for future API calls
+	// https://developer.tastytrade.com/api-guides/sessions/
+	// login.GetSessionToken()
+
 	// get session token from 1Password
-	username, token := login.GetCreds()
-	fmt.Printf("Hello %s\n", username)
+	username, token := login.GetCreds(sbxVaultUser, sbxVaultToken)
+	fmt.Printf("Hello %s\ttoken:%s\n", username, token)
 
 	// command we'll use for testing
 	accountList := ApiMsg{method: "GET", msg: "customers/me/accounts", model: "account"}
