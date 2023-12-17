@@ -77,6 +77,9 @@ func GetSessionToken() {
 
 	sessionToken := httpclient.GetSessionTokens(login, password)
 
+	// // debug
+	// fmt.Printf("session token: %s", sessionToken)
+
 	// write session token to 1Password
 	WriteCreds(login, sessionToken)
 }
