@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"example/user/tasty/httpclient"
 	"example/user/tasty/jsondecode"
 	"example/user/tasty/login"
@@ -25,16 +26,35 @@ type ApiMsg struct {
 }
 
 func init() {
-	cli.AppHelpTemplate += "\nCUSTOMIZED: you bet ur muffins\n"
+	cli.AppHelpTemplate = `NAME:
+	{{.Name}} - {{.Usage}}
+ USAGE:
+	{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
+	{{if len .Authors}}
+ AUTHOR:
+	{{range .Authors}}{{ . }}{{end}}
+	{{end}}{{if .Commands}}
+ COMMANDS:
+ {{range .Commands}}{{if not .HideHelp}}   {{join .Names ", "}}{{ "\t"}}{{.Usage}}{{ "\n" }}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
+ GLOBAL OPTIONS:
+	{{range .VisibleFlags}}{{.}}
+	{{end}}{{end}}{{if .Copyright }}
+ COPYRIGHT:
+	{{.Copyright}}
+	{{end}}{{if .Version}}
+ VERSION:
+	{{.Version}}
+	{{end}}
+`
 	cli.CommandHelpTemplate += "\nYMMV\n"
 	cli.SubcommandHelpTemplate += "\nor something\n"
 
-	cli.HelpFlag = &cli.BoolFlag{Name: "halp"}
+	cli.HelpFlag = &cli.BoolFlag{Name: "help", Aliases: []string{"h"}}
 	cli.VersionFlag = &cli.BoolFlag{Name: "print-version", Aliases: []string{"V"}}
 
-	cli.HelpPrinter = func(w io.Writer, templ string, data interface{}) {
-		fmt.Fprintf(w, "best of luck to you\n")
-	}
+	// cli.HelpPrinter = func(w io.Writer, templ string, data interface{}) {
+	// 	fmt.Fprintf(w, "best of luck to you\n")
+	// }
 	cli.VersionPrinter = func(cCtx *cli.Context) {
 		fmt.Fprintf(cCtx.App.Writer, "version=%s\n", cCtx.App.Version)
 	}
@@ -72,58 +92,74 @@ func (g *genericType) String() string {
 }
 
 func main() {
+
 	app := &cli.App{
 		Name:     "tasty",
 		Version:  "v1.0",
 		Compiled: time.Now(),
 		Authors: []*cli.Author{
-			&cli.Author{
+			{
 				Name:  "Becki True",
 				Email: "becki@beckitrue.com",
 			},
 		},
 		Copyright: "(c) 2023 Me",
 		HelpName:  "tasty",
-		Usage:     "cli for Tastytrade API",
+		Usage:     "cli for securely calling the Tastytrade API",
 		UsageText: "tasty- demonstrating the functionality of the API",
-		ArgsUsage: "[debug]",
+		// ArgsUsage: "[debug]",
 		Commands: []*cli.Command{
-			&cli.Command{
+			{
 				Name:        "login",
 				Aliases:     []string{"l"},
 				Category:    "login",
-				Usage:       "login to get session token that is good for 24 hours or until you logout",
-				UsageText:   "login [global commands] env [sbx | prod]",
-				Description: "main command",
-				ArgsUsage:   "[sbx | prod]",
+				Usage:       "login to get session token",
+				UsageText:   "login (defaults to sbx)",
+				Description: "login to get session token that is good for 24 hours or until you logout",
+				ArgsUsage:   "[env [sbx | prod]]",
 				Flags: []cli.Flag{
-					&cli.BoolFlag{Name: "forever", Aliases: []string{"forevvarr"}},
+					&cli.BoolFlag{
+						Name:     "debug",
+						Aliases:  []string{"d"},
+						Usage:    "displays additional messaging from HTTP requests and API calls",
+						Category: "Debug",
+					},
 				},
 				Action: initialLogin,
 			},
-			&cli.Command{
+			{
 				Name:        "accounts",
 				Aliases:     []string{"a"},
 				Category:    "accounts",
 				Usage:       "returns a list of your customer accounts",
-				UsageText:   "accounts [global commands]",
+				UsageText:   "accounts [--debug | -d]",
 				Description: "returns a list of your customer accounts in your sbx or prod account",
 				ArgsUsage:   "[]",
 				Flags: []cli.Flag{
-					&cli.BoolFlag{Name: "forever", Aliases: []string{"forevvarr"}},
+					&cli.BoolFlag{
+						Name:     "debug",
+						Aliases:  []string{"d"},
+						Usage:    "displays additional messaging from HTTP requests and API calls",
+						Category: "Debug",
+					},
 				},
 				Action: getAccounts,
 			},
-			&cli.Command{
+			{
 				Name:        "me",
 				Aliases:     []string{"info"},
-				Category:    "accounts",
-				Usage:       "returns your customer accounts",
-				UsageText:   "me [global commands]",
+				Category:    "customer",
+				Usage:       "returns your customer information",
+				UsageText:   "me [--debug | -d]",
 				Description: "returns your customer information in your sbx or prod account",
 				ArgsUsage:   "[]",
 				Flags: []cli.Flag{
-					&cli.BoolFlag{Name: "forever", Aliases: []string{"forevvarr"}},
+					&cli.BoolFlag{
+						Name:     "debug",
+						Aliases:  []string{"d"},
+						Usage:    "displays additional messaging from HTTP requests and API calls",
+						Category: "Debug",
+					},
 				},
 				Before: func(cCtx *cli.Context) error {
 					fmt.Fprintf(cCtx.App.Writer, "You are logged in to your sbx account\n")
@@ -131,6 +167,26 @@ func main() {
 				},
 				Action: customerInfo,
 			},
+		},
+		Action: func(cCtx *cli.Context) error {
+			cli.DefaultAppComplete(cCtx)
+			cli.HandleExitCoder(errors.New("not an exit coder, though"))
+			cli.ShowAppHelp(cCtx)
+			cli.ShowCommandCompletions(cCtx, "nope")
+			cli.ShowCommandHelp(cCtx, "also-nope")
+			cli.ShowCompletions(cCtx)
+			cli.ShowSubcommandHelp(cCtx)
+			cli.ShowVersion(cCtx)
+
+			cCtx.App.Setup()
+			fmt.Printf("%#v\n", cCtx.App.VisibleCategories())
+			fmt.Printf("%#v\n", cCtx.App.VisibleCommands())
+			fmt.Printf("%#v\n", cCtx.App.VisibleFlags())
+
+			ec := cli.Exit("ohwell", 86)
+			fmt.Fprintf(cCtx.App.Writer, "%d", ec.ExitCode())
+			fmt.Printf("made it!\n")
+			return ec
 		},
 	}
 
@@ -140,6 +196,11 @@ func main() {
 }
 
 func initialLogin(cCtx *cli.Context) error {
+
+	if cCtx.Bool("debug") {
+		fmt.Printf("Debug flag set\n")
+	}
+
 	login.GetSessionToken()
 
 	return nil
@@ -161,6 +222,10 @@ func customerInfo(cCtx *cli.Context) error {
 	customerMe := ApiMsg{method: "GET", msg: "customers/me", model: "account"}
 	cmd := customerMe
 
+	if cCtx.Bool("debug") {
+		fmt.Printf("Debug flag set\n")
+	}
+
 	respString := Get(cmd)
 	jsondecode.PrintMe(respString)
 
@@ -170,6 +235,10 @@ func customerInfo(cCtx *cli.Context) error {
 func getAccounts(cCtx *cli.Context) error {
 	accountList := ApiMsg{method: "GET", msg: "customers/me/accounts", model: "account"}
 	cmd := accountList
+
+	if cCtx.Bool("debug") {
+		fmt.Printf("Debug flag set\n")
+	}
 
 	respString := Get(cmd)
 	jsondecode.PrintDataAccounts(respString)

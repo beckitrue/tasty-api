@@ -70,6 +70,7 @@ func ApiCall(token string, requestURL string, request string) string {
 		log.Fatalf("client: error making http request: %s\n", err)
 	}
 
+	// TODO Debug
 	log.Printf("client: status code: %d\n", res.StatusCode)
 
 	resBody, err := io.ReadAll(res.Body)
