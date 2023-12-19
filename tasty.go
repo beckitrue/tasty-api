@@ -19,6 +19,10 @@ const (
 	sbxVaultToken = "op://Private/tastytrade-sbx-api/credential"
 )
 
+// set the env and debug variables to default values
+var prod bool = false
+var debug bool = false
+
 type ApiMsg struct {
 	method string
 	msg    string
@@ -35,7 +39,7 @@ func init() {
 	{{range .Authors}}{{ . }}{{end}}
 	{{end}}{{if .Commands}}
  COMMANDS:
- {{range .Commands}}{{if not .HideHelp}}   {{join .Names ", "}}{{ "\t"}}{{.Usage}}{{ "\n" }}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
+ {{range .Commands}}{{if not .HideHelp}} {{join .Names ", "}}{{ "\t"}}{{.Usage}}{{ "\n" }}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
  GLOBAL OPTIONS:
 	{{range .VisibleFlags}}{{.}}
 	{{end}}{{end}}{{if .Copyright }}
@@ -45,9 +49,10 @@ func init() {
  VERSION:
 	{{.Version}}
 	{{end}}
+ WEBSITE: https://github.com/beckitrue/tasty-api
 `
-	cli.CommandHelpTemplate += "\nYMMV\n"
-	cli.SubcommandHelpTemplate += "\nor something\n"
+	cli.CommandHelpTemplate += "\nWEBSITE: https://github.com/beckitrue/tasty-api\n"
+	cli.SubcommandHelpTemplate += "\nWEBSITE: https://github.com/beckitrue/tasty-api\n"
 
 	cli.HelpFlag = &cli.BoolFlag{Name: "help", Aliases: []string{"h"}}
 	cli.VersionFlag = &cli.BoolFlag{Name: "print-version", Aliases: []string{"V"}}
@@ -107,25 +112,75 @@ func main() {
 		HelpName:  "tasty",
 		Usage:     "cli for securely calling the Tastytrade API",
 		UsageText: "tasty- demonstrating the functionality of the API",
-		// ArgsUsage: "[debug]",
+		// ArgsUsage: "[]",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:               "debug",
+				Category:           "",
+				DefaultText:        "",
+				FilePath:           "",
+				Usage:              "displays additional messaging from HTTP requests and API calls",
+				Required:           false,
+				Hidden:             false,
+				HasBeenSet:         false,
+				Value:              false,
+				Destination:        new(bool),
+				Aliases:            []string{"d"},
+				EnvVars:            []string{},
+				Count:              new(int),
+				DisableDefaultText: false,
+				Action: func(*cli.Context, bool) error {
+					debug = true
+					return nil
+				},
+			},
+		},
 		Commands: []*cli.Command{
 			{
 				Name:        "login",
 				Aliases:     []string{"l"},
 				Category:    "login",
 				Usage:       "login to get session token",
-				UsageText:   "login (defaults to sbx)",
+				UsageText:   "login --prod for live account (defaults to sbx if flag is unset)",
 				Description: "login to get session token that is good for 24 hours or until you logout",
-				ArgsUsage:   "[env [sbx | prod]]",
+				ArgsUsage:   "[]",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:     "debug",
-						Aliases:  []string{"d"},
-						Usage:    "displays additional messaging from HTTP requests and API calls",
-						Category: "Debug",
+						Name:               "prod",
+						Category:           "",
+						DefaultText:        "",
+						FilePath:           "",
+						Usage:              "set this flag if you want to connect to your live account",
+						Required:           false,
+						Hidden:             false,
+						HasBeenSet:         false,
+						Value:              false,
+						Destination:        new(bool),
+						Aliases:            []string{"p"},
+						EnvVars:            []string{},
+						Count:              new(int),
+						DisableDefaultText: false,
+						Action: func(*cli.Context, bool) error {
+							prod = true
+							return nil
+						},
 					},
 				},
 				Action: initialLogin,
+			},
+			{
+				Name:        "me",
+				Aliases:     []string{"info"},
+				Category:    "customer",
+				Usage:       "returns your customer information",
+				UsageText:   "me [options]",
+				Description: "returns your customer information in your sbx or prod account",
+				ArgsUsage:   "[--prod, --debug ]",
+				Before: func(cCtx *cli.Context) error {
+					fmt.Fprintf(cCtx.App.Writer, "You are logged in to your sbx account\n")
+					return nil
+				},
+				Action: customerInfo,
 			},
 			{
 				Name:        "accounts",
@@ -135,37 +190,7 @@ func main() {
 				UsageText:   "accounts [--debug | -d]",
 				Description: "returns a list of your customer accounts in your sbx or prod account",
 				ArgsUsage:   "[]",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:     "debug",
-						Aliases:  []string{"d"},
-						Usage:    "displays additional messaging from HTTP requests and API calls",
-						Category: "Debug",
-					},
-				},
-				Action: getAccounts,
-			},
-			{
-				Name:        "me",
-				Aliases:     []string{"info"},
-				Category:    "customer",
-				Usage:       "returns your customer information",
-				UsageText:   "me [--debug | -d]",
-				Description: "returns your customer information in your sbx or prod account",
-				ArgsUsage:   "[]",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:     "debug",
-						Aliases:  []string{"d"},
-						Usage:    "displays additional messaging from HTTP requests and API calls",
-						Category: "Debug",
-					},
-				},
-				Before: func(cCtx *cli.Context) error {
-					fmt.Fprintf(cCtx.App.Writer, "You are logged in to your sbx account\n")
-					return nil
-				},
-				Action: customerInfo,
+				Action:      getAccounts,
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
@@ -197,13 +222,23 @@ func main() {
 
 func initialLogin(cCtx *cli.Context) error {
 
-	if cCtx.Bool("debug") {
-		fmt.Printf("Debug flag set\n")
-	}
+	checkDebugFlag(cCtx)
 
 	login.GetSessionToken()
 
 	return nil
+}
+
+func checkDebugFlag(cCtx *cli.Context) {
+	if cCtx.Bool("debug") {
+		fmt.Printf("Debug flag set\n")
+	}
+}
+
+func checkProdFlag(cCtx *cli.Context) {
+	if cCtx.Bool("prod") {
+		fmt.Printf("Prod flag set\n")
+	}
 }
 
 func Get(cmd ApiMsg) (response string) {
@@ -222,9 +257,7 @@ func customerInfo(cCtx *cli.Context) error {
 	customerMe := ApiMsg{method: "GET", msg: "customers/me", model: "account"}
 	cmd := customerMe
 
-	if cCtx.Bool("debug") {
-		fmt.Printf("Debug flag set\n")
-	}
+	checkDebugFlag(cCtx)
 
 	respString := Get(cmd)
 	jsondecode.PrintMe(respString)
@@ -236,9 +269,7 @@ func getAccounts(cCtx *cli.Context) error {
 	accountList := ApiMsg{method: "GET", msg: "customers/me/accounts", model: "account"}
 	cmd := accountList
 
-	if cCtx.Bool("debug") {
-		fmt.Printf("Debug flag set\n")
-	}
+	checkDebugFlag(cCtx)
 
 	respString := Get(cmd)
 	jsondecode.PrintDataAccounts(respString)
