@@ -176,11 +176,7 @@ func main() {
 				UsageText:   "me [options]",
 				Description: "returns your customer information in your sbx or prod account",
 				ArgsUsage:   "[--prod, --debug ]",
-				Before: func(cCtx *cli.Context) error {
-					fmt.Fprintf(cCtx.App.Writer, "You are logged in to your sbx account\n")
-					return nil
-				},
-				Action: customerInfo,
+				Action:      customerInfo,
 			},
 			{
 				Name:        "accounts",
@@ -237,7 +233,9 @@ func checkDebugFlag(cCtx *cli.Context) {
 
 func checkProdFlag(cCtx *cli.Context) {
 	if cCtx.Bool("prod") {
-		fmt.Printf("Prod flag set\n")
+		fmt.Printf("You are in your live accountt\n")
+	} else {
+		fmt.Printf("You are in your sbx account\n")
 	}
 }
 
@@ -258,6 +256,7 @@ func customerInfo(cCtx *cli.Context) error {
 	cmd := customerMe
 
 	checkDebugFlag(cCtx)
+	checkProdFlag(cCtx)
 
 	respString := Get(cmd)
 	jsondecode.PrintMe(respString)
@@ -270,6 +269,7 @@ func getAccounts(cCtx *cli.Context) error {
 	cmd := accountList
 
 	checkDebugFlag(cCtx)
+	checkProdFlag(cCtx)
 
 	respString := Get(cmd)
 	jsondecode.PrintDataAccounts(respString)
