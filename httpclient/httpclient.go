@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
 )
 
 func CreateURL(env string, endpoint string) (url string) {
@@ -29,7 +30,7 @@ func CreateURL(env string, endpoint string) (url string) {
 
 }
 
-func ApiCall(token string, requestURL string, request string) string {
+func ApiCall(token string, requestURL string, request string, debug bool) string {
 
 	// TODO: logic for Method selection based on func input params
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
@@ -54,15 +55,16 @@ func ApiCall(token string, requestURL string, request string) string {
 		Timeout:   10 * tr.IdleConnTimeout,
 	}
 
-	// TODO: Debug
-	// // debug http call
-	// reqDump, err := httputil.DumpRequestOut(req, true)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	// TODO: mask authorization token
+	// debug http call
+	if debug {
+		reqDump, err := httputil.DumpRequestOut(req, true)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	// log.Printf("REQUEST:\n%s", string(reqDump))
-	// // end debug
+		log.Printf("REQUEST:\n%s", string(reqDump))
+	}
 
 	res, err := client.Do(req)
 
@@ -70,7 +72,9 @@ func ApiCall(token string, requestURL string, request string) string {
 		log.Fatalf("client: error making http request: %s\n", err)
 	}
 
-	log.Printf("client: status code: %d\n", res.StatusCode)
+	if debug {
+		log.Printf("client: status code: %d\n", res.StatusCode)
+	}
 
 	resBody, err := io.ReadAll(res.Body)
 

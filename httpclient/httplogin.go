@@ -8,9 +8,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
 )
 
-func GetSessionTokens(login string, password string) (session string) {
+func GetSessionTokens(login string, password string, debug bool) (session string) {
 
 	// HTTP endpoint
 	sessionURL := "https://api.cert.tastyworks.com/sessions"
@@ -31,15 +32,15 @@ func GetSessionTokens(login string, password string) (session string) {
 
 	client := &http.Client{}
 
-	// TODO: Debug
-	// // debug http call
-	// reqDump, err := httputil.DumpRequestOut(req, true)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	// debug http call
+	if debug {
+		reqDump, err := httputil.DumpRequestOut(req, true)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	// log.Printf("REQUEST:\n%s", string(reqDump))
-	// // end debug
+		log.Printf("REQUEST:\n%s", string(reqDump))
+	}
 
 	res, err := client.Do(req)
 
