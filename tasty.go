@@ -31,6 +31,7 @@ type ApiMsg struct {
 }
 
 func init() {
+
 	cli.AppHelpTemplate = `NAME:
 	{{.Name}} - {{.Usage}}
  USAGE:
@@ -189,6 +190,45 @@ func main() {
 				Description: "returns a list of your customer accounts in your sbx or prod account",
 				ArgsUsage:   "[]",
 				Action:      getAccounts,
+			},
+			{
+				Name:        "set-account",
+				Aliases:     []string{"sa"},
+				Category:    "accounts",
+				Usage:       "sets the account you want to interact with",
+				UsageText:   "set-account [account id]",
+				Description: "sets the account you want to interact with",
+				ArgsUsage:   "[enter your account id]",
+				Action: func(cCtx *cli.Context) error {
+					fmt.Printf("OK, we'll be working with account id: %s\n", cCtx.Args().Get(0))
+					return nil
+				},
+			},
+			{
+				Name:        "get-account",
+				Aliases:     []string{"ga"},
+				Category:    "accounts",
+				Usage:       "gets the account you set to interact with",
+				UsageText:   "get-account",
+				Description: "gets the account you set to interact with",
+				Action: func(cCtx *cli.Context) error {
+					fmt.Printf("We're working with account id: %s\n", "pull this from a file")
+					return nil
+				},
+			},
+			{
+				Name:        "get-positions",
+				Aliases:     []string{"positions"},
+				Category:    "accounts",
+				Usage:       "lists the account positions",
+				UsageText:   "get-positions [account id if you haven't set one]",
+				Description: "lists the account positions for the account you set to interact with using the set-account command",
+				ArgsUsage:   "[enter your account id]",
+				Action: func(cCtx *cli.Context) error {
+					fmt.Printf("We're working with account id: %s\n", "pull this from a file")
+					// TODO: write the function to call api
+					return nil
+				},
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
