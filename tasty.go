@@ -14,12 +14,13 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// TODO: move to a config file
 const (
 	sbxVaultUser  = "op://Private/tastytrade-sbx-api/username"
 	sbxVaultToken = "op://Private/tastytrade-sbx-api/credential"
 )
 
-// set the env and debug variables to default values
+// set the prod and debug variables to default values
 var prod bool = false
 var debug bool = false
 
@@ -39,7 +40,7 @@ func init() {
 	{{range .Authors}}{{ . }}{{end}}
 	{{end}}{{if .Commands}}
  COMMANDS:
- {{range .Commands}}{{if not .HideHelp}} {{join .Names ", "}}{{ "\t"}}{{.Usage}}{{ "\n" }}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
+ {{range .Commands}}{{if not .HideHelp}} {{join .Names ", "}}{{ "\t"}}{{.Usage}}{{ "\n " }}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
  GLOBAL OPTIONS:
 	{{range .VisibleFlags}}{{.}}
 	{{end}}{{end}}{{if .Copyright }}
@@ -50,9 +51,10 @@ func init() {
 	{{.Version}}
 	{{end}}
  WEBSITE: https://github.com/beckitrue/tasty-api
+ THANK YOU: https://cli.urfave.org/
 `
-	cli.CommandHelpTemplate += "\nWEBSITE: https://github.com/beckitrue/tasty-api\n"
-	cli.SubcommandHelpTemplate += "\nWEBSITE: https://github.com/beckitrue/tasty-api\n"
+	cli.CommandHelpTemplate += "\nWEBSITE: https://github.com/beckitrue/tasty-api\nTHANK YOU: https://cli.urfave.org/\n"
+	cli.SubcommandHelpTemplate += "\nWEBSITE: https://github.com/beckitrue/tasty-api\nTHANK YOU: https://cli.urfave.org/\n"
 
 	cli.HelpFlag = &cli.BoolFlag{Name: "help", Aliases: []string{"h"}}
 	cli.VersionFlag = &cli.BoolFlag{Name: "print-version", Aliases: []string{"V"}}
@@ -217,10 +219,10 @@ func main() {
 }
 
 func initialLogin(cCtx *cli.Context) error {
+	// gets the session token and writes
+	// it to 1Password
 
-	checkDebugFlag(cCtx)
-
-	login.GetSessionToken()
+	login.GetSessionToken(debug)
 
 	return nil
 }
@@ -243,10 +245,12 @@ func Get(cmd ApiMsg) (response string) {
 	_, token := login.GetCreds(sbxVaultUser, sbxVaultToken)
 
 	url := httpclient.CreateURL("sbx", cmd.msg)
-	respString := httpclient.ApiCall(token, url, cmd.method)
+	respString := httpclient.ApiCall(token, url, cmd.method, debug)
 
-	// TODO: Debug
-	// log.Println(respString)
+	// Debug by printing the whole response from the API call
+	if debug {
+		log.Println(respString)
+	}
 
 	return respString
 }
@@ -255,7 +259,6 @@ func customerInfo(cCtx *cli.Context) error {
 	customerMe := ApiMsg{method: "GET", msg: "customers/me", model: "account"}
 	cmd := customerMe
 
-	checkDebugFlag(cCtx)
 	checkProdFlag(cCtx)
 
 	respString := Get(cmd)
@@ -268,7 +271,6 @@ func getAccounts(cCtx *cli.Context) error {
 	accountList := ApiMsg{method: "GET", msg: "customers/me/accounts", model: "account"}
 	cmd := accountList
 
-	checkDebugFlag(cCtx)
 	checkProdFlag(cCtx)
 
 	respString := Get(cmd)

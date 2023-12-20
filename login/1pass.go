@@ -68,16 +68,16 @@ func WriteCreds(user string, sessionToken string) {
 
 }
 
-func GetSessionToken() {
+func GetSessionToken(debug bool) {
 	// login to get the session and remember tokens
 	login, password := GetCreds(sbxUserName, sbxPassword)
 
 	// trim the new line from the login value before returning
 	login = strings.TrimSuffix(login, "\n")
 
-	sessionToken := httpclient.GetSessionTokens(login, password)
+	sessionToken := httpclient.GetSessionTokens(login, password, debug)
 
-	// // debug
+	// TODO debug
 	// fmt.Printf("session token: %s", sessionToken)
 
 	// write session token to 1Password
