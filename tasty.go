@@ -200,8 +200,13 @@ func main() {
 				Description: "sets the account you want to interact with",
 				ArgsUsage:   "[enter your account id]",
 				Action: func(cCtx *cli.Context) error {
-					fmt.Printf("OK, we'll be working with account id: %s\n", cCtx.Args().Get(0))
+					if cCtx.NArg() > 0 {
+						fmt.Printf("OK, we'll be working with account id: %s\n", cCtx.Args().Get(0))
+					} else {
+						fmt.Printf("You didn't enter an acount number\n")
+					}
 					return nil
+					// TODO: error checking on the input
 				},
 			},
 			{
