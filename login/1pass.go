@@ -16,8 +16,6 @@ const (
 	sbxVaultUser  = "op://Private/tastytrade-sbx-api/username"
 	sbxVaultToken = "op://Private/tastytrade-sbx-api/credential"
 	sbxApiItem    = "tastytrade-sbx-api"
-
-// sbxRememberToken = "op://Private/tastytrade-sbx-api/remember"
 )
 
 func TrimNewLine(value string) (cleanString string) {
