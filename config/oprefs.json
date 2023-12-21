@@ -27,6 +27,15 @@
             "prodVaultUser": "op://Private/tastytrade-api/username",
             "prodVaultToken": "op://Private/tastytrade-api/credential",
             "prodApiItem": "tastytrade-api"
-        }
+        },
+        "sbxAccountNumbers": [
+            {
+                "accountNumRef": "op://Private/Tasty/account1"
+            },
+            {
+                "accountNumRef": "op://Private/Tasty/account2"
+            }
+        ],
+        "prodFlag": false
     }
 }
