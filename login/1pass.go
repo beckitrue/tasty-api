@@ -11,10 +11,10 @@ import (
 const (
 	op = "/usr/bin/op"
 
-	sbxUserName   = "op://Private/Tasty_sbx/username"
-	sbxPassword   = "op://Private/Tasty_sbx/credential"
-	sbxVaultUser  = "op://Private/tastytrade-sbx-api/username"
-	sbxVaultToken = "op://Private/tastytrade-sbx-api/credential"
+	sbxUserName   = "op://SBX/Tasty_sbx/username"
+	sbxPassword   = "op://SBX/Tasty_sbx/credential"
+	sbxVaultUser  = "op://SBX/tastytrade-sbx-api/username"
+	sbxVaultToken = "op://SBX/tastytrade-sbx-api/credential"
 	sbxApiItem    = "tastytrade-sbx-api"
 )
 
@@ -52,7 +52,7 @@ func GetCreds(userRef string, passwordRef string) (string, string) {
 
 func WriteCreds(user string, sessionToken string) {
 	// writes the session token to 1Password to be used for
-	// API calls "op://Private/tastytrade-sbx-api/credential"
+	// API calls "op://SBX/tastytrade-sbx-api/credential"
 
 	// craft credential string
 	credential := "credential=" + sessionToken
