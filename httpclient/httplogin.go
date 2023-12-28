@@ -3,46 +3,48 @@ package httpclient
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/beckitrue/tasty-api/jsondecode"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
+
+	"github.com/beckitrue/tasty-api/jsondecode"
 )
 
 const (
 	sessionURL = "https://api.cert.tastyworks.com/sessions"
 )
 
-func DestroySession (token string, debug bool) {
+func DestroySession(token string, debug bool) {
 
 	req, err := http.NewRequest("DELETE", sessionURL, nil)
-    req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authoriztion", token)
+	req.Header.Add("User-Agent", "my-custom-client/2.0")
 
 	if err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 
 	client := &http.Client{}
- 
-	// debug http call                                            
-	if debug {                                                    
-	    reqDump, err := httputil.DumpRequestOut(req, true)        
-	    if err != nil {                                           
-		    log.Fatal(err)                                        
-	    }                                                         
-                                                              
-	    log.Printf("REQUEST:\n%s", string(reqDump))               
-	}                                                             
-	                                                              
+
+	// debug http call
+	if debug {
+		reqDump, err := httputil.DumpRequestOut(req, true)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.Printf("REQUEST:\n%s", string(reqDump))
+	}
+
 	res, err := client.Do(req)
 
-	if err != nil {                                                    
-	    log.Fatalf("client: error making http request: %s\n", err)     
-	}                                                                  
-	                                                                   
+	if err != nil {
+		log.Fatalf("client: error making http request: %s\n", err)
+	}
+
 	log.Printf("client: status code: %d\n", res.StatusCode)
 
 }
@@ -50,7 +52,7 @@ func DestroySession (token string, debug bool) {
 func GetSessionTokens(login string, password string, debug bool) (session string) {
 
 	// HTTP endpoint
-	sessionURL := "https://api.cert.tastyworks.com/sessions"
+	// sessionURL := "https://api.cert.tastyworks.com/sessions"
 
 	// JSON body
 	body := []byte(`{
@@ -61,6 +63,7 @@ func GetSessionTokens(login string, password string, debug bool) (session string
 	// Create a HTTP post request
 	req, err := http.NewRequest("POST", sessionURL, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("User-Agent", "my-custom-client/2.0")
 
 	if err != nil {
 		panic(err)
