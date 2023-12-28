@@ -1,7 +1,7 @@
 package login
 
 import (
-	"example/user/tasty/httpclient"
+	"github.com/beckitrue/tasty-api/httpclient"
 	"log"
 	"os/exec"
 	"strings"
@@ -11,13 +11,11 @@ import (
 const (
 	op = "/usr/bin/op"
 
-	sbxUserName   = "op://Private/Tasty_sbx/username"
-	sbxPassword   = "op://Private/Tasty_sbx/credential"
-	sbxVaultUser  = "op://Private/tastytrade-sbx-api/username"
-	sbxVaultToken = "op://Private/tastytrade-sbx-api/credential"
+	sbxUserName   = "op://SBX/Tasty_sbx/username"
+	sbxPassword   = "op://SBX/Tasty_sbx/credential"
+	sbxVaultUser  = "op://SBX/tastytrade-sbx-api/username"
+	sbxVaultToken = "op://SBX/tastytrade-sbx-api/credential"
 	sbxApiItem    = "tastytrade-sbx-api"
-
-// sbxRememberToken = "op://Private/tastytrade-sbx-api/remember"
 )
 
 func TrimNewLine(value string) (cleanString string) {
@@ -54,7 +52,7 @@ func GetCreds(userRef string, passwordRef string) (string, string) {
 
 func WriteCreds(user string, sessionToken string) {
 	// writes the session token to 1Password to be used for
-	// API calls "op://Private/tastytrade-sbx-api/credential"
+	// API calls "op://SBX/tastytrade-sbx-api/credential"
 
 	// craft credential string
 	credential := "credential=" + sessionToken
@@ -70,6 +68,7 @@ func WriteCreds(user string, sessionToken string) {
 
 func GetSessionToken(debug bool) {
 	// login to get the session and remember tokens
+
 	login, password := GetCreds(sbxUserName, sbxPassword)
 
 	// trim the new line from the login value before returning
@@ -83,3 +82,20 @@ func GetSessionToken(debug bool) {
 	// write session token to 1Password
 	WriteCreds(login, sessionToken)
 }
+
+func DisableToken(debug bool) {
+    // gets the current session token to pass to the API call to
+	// delete the session token - takes no action on the 1Password item
+
+    currentToken, err := exec.Command(op, "read", sbxVaultToken).Output()
+    token := string(currentToken[:])
+    token = TrimNewLine(token)
+
+	if err != nil {
+        log.Fatal("can't read secret reference for current token ", err)
+    }
+
+	httpclient.DestroySession(token, debug)
+}
+
+

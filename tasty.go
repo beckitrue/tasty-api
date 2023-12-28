@@ -2,9 +2,9 @@ package main
 
 import (
 	"errors"
-	"example/user/tasty/httpclient"
-	"example/user/tasty/jsondecode"
-	"example/user/tasty/login"
+	"github.com/beckitrue/tasty-api/httpclient"
+	"github.com/beckitrue/tasty-api/jsondecode"
+	"github.com/beckitrue/tasty-api/login"
 	"fmt"
 	"io"
 	"log"
@@ -16,8 +16,8 @@ import (
 
 // TODO: move to a config file
 const (
-	sbxVaultUser  = "op://Private/tastytrade-sbx-api/username"
-	sbxVaultToken = "op://Private/tastytrade-sbx-api/credential"
+	sbxVaultUser  = "op://SBX/tastytrade-sbx-api/username"
+	sbxVaultToken = "op://SBX/tastytrade-sbx-api/credential"
 )
 
 // set the prod and debug variables to default values
@@ -31,6 +31,7 @@ type ApiMsg struct {
 }
 
 func init() {
+
 	cli.AppHelpTemplate = `NAME:
 	{{.Name}} - {{.Usage}}
  USAGE:
@@ -171,6 +172,14 @@ func main() {
 				Action: initialLogin,
 			},
 			{
+				Name:        "logout",
+				Category:    "login",
+				Usage:       "disables your session token",
+				UsageText:   "logout",
+				Description: "disables your session token, logging you out",
+				Action:      customerLogout,
+			},
+			{
 				Name:        "me",
 				Aliases:     []string{"info"},
 				Category:    "customer",
@@ -189,6 +198,50 @@ func main() {
 				Description: "returns a list of your customer accounts in your sbx or prod account",
 				ArgsUsage:   "[]",
 				Action:      getAccounts,
+			},
+			{
+				Name:        "set-account",
+				Aliases:     []string{"sa"},
+				Category:    "accounts",
+				Usage:       "sets the account you want to interact with",
+				UsageText:   "set-account [account id]",
+				Description: "sets the account you want to interact with",
+				ArgsUsage:   "[enter your account id]",
+				Action: func(cCtx *cli.Context) error {
+					if cCtx.NArg() > 0 {
+						fmt.Printf("OK, we'll be working with account id: %s\n", cCtx.Args().Get(0))
+					} else {
+						fmt.Printf("You didn't enter an acount number\n")
+					}
+					return nil
+					// TODO: error checking on the input
+				},
+			},
+			{
+				Name:        "get-account",
+				Aliases:     []string{"ga"},
+				Category:    "accounts",
+				Usage:       "gets the account you set to interact with",
+				UsageText:   "get-account",
+				Description: "gets the account you set to interact with",
+				Action: func(cCtx *cli.Context) error {
+					fmt.Printf("We're working with account id: %s\n", "pull this from a file")
+					return nil
+				},
+			},
+			{
+				Name:        "get-positions",
+				Aliases:     []string{"positions"},
+				Category:    "accounts",
+				Usage:       "lists the account positions",
+				UsageText:   "get-positions [account id if you haven't set one]",
+				Description: "lists the account positions for the account you set to interact with using the set-account command",
+				ArgsUsage:   "[enter your account id]",
+				Action: func(cCtx *cli.Context) error {
+					fmt.Printf("We're working with account id: %s\n", "pull this from a file")
+					// TODO: write the function to call api
+					return nil
+				},
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
@@ -223,6 +276,14 @@ func initialLogin(cCtx *cli.Context) error {
 	// it to 1Password
 
 	login.GetSessionToken(debug)
+
+	return nil
+}
+
+func customerLogout(cCtx *cli.Context) error {
+	// disables the user's session token
+
+	login.DisableToken(debug)
 
 	return nil
 }

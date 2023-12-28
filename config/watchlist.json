@@ -1,0 +1,15 @@
+{
+    "name":	"favs",
+    "group-name": "favs",
+    "order-index": "0",
+    "watchlist-entries":	[
+        {
+            "symbol": "MSFT",
+            "instrument-type": "Equity"
+        },
+        {
+            "symbol": "DDOG",
+            "instrument-type": "Equity"
+        }
+    ]
+}
