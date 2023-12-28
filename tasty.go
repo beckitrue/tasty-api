@@ -2,9 +2,9 @@ package main
 
 import (
 	"errors"
-	"example/user/tasty/httpclient"
-	"example/user/tasty/jsondecode"
-	"example/user/tasty/login"
+	"github.com/beckitrue/tasty-api/httpclient"
+	"github.com/beckitrue/tasty-api/jsondecode"
+	"github.com/beckitrue/tasty-api/login"
 	"fmt"
 	"io"
 	"log"
@@ -16,8 +16,8 @@ import (
 
 // TODO: move to a config file
 const (
-	sbxVaultUser  = "op://Private/tastytrade-sbx-api/username"
-	sbxVaultToken = "op://Private/tastytrade-sbx-api/credential"
+	sbxVaultUser  = "op://SBX/tastytrade-sbx-api/username"
+	sbxVaultToken = "op://SBX/tastytrade-sbx-api/credential"
 )
 
 // set the prod and debug variables to default values
@@ -172,6 +172,14 @@ func main() {
 				Action: initialLogin,
 			},
 			{
+				Name:        "logout",
+				Category:    "login",
+				Usage:       "disables your session token",
+				UsageText:   "logout",
+				Description: "disables your session token, logging you out",
+				Action:      customerLogout,
+			},
+			{
 				Name:        "me",
 				Aliases:     []string{"info"},
 				Category:    "customer",
@@ -268,6 +276,14 @@ func initialLogin(cCtx *cli.Context) error {
 	// it to 1Password
 
 	login.GetSessionToken(debug)
+
+	return nil
+}
+
+func customerLogout(cCtx *cli.Context) error {
+	// disables the user's session token
+
+	login.DisableToken(debug)
 
 	return nil
 }

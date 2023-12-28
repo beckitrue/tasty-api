@@ -1,7 +1,7 @@
 package login
 
 import (
-	"example/user/tasty/httpclient"
+	"github.com/beckitrue/tasty-api/httpclient"
 	"log"
 	"os/exec"
 	"strings"
@@ -68,6 +68,7 @@ func WriteCreds(user string, sessionToken string) {
 
 func GetSessionToken(debug bool) {
 	// login to get the session and remember tokens
+
 	login, password := GetCreds(sbxUserName, sbxPassword)
 
 	// trim the new line from the login value before returning
@@ -81,3 +82,20 @@ func GetSessionToken(debug bool) {
 	// write session token to 1Password
 	WriteCreds(login, sessionToken)
 }
+
+func DisableToken(debug bool) {
+    // gets the current session token to pass to the API call to
+	// delete the session token - takes no action on the 1Password item
+
+    currentToken, err := exec.Command(op, "read", sbxVaultToken).Output()
+    token := string(currentToken[:])
+    token = TrimNewLine(token)
+
+	if err != nil {
+        log.Fatal("can't read secret reference for current token ", err)
+    }
+
+	httpclient.DestroySession(token, debug)
+}
+
+
