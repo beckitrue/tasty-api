@@ -5,6 +5,7 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"fmt"
 )
 
 // 1 Password secret references
@@ -29,6 +30,9 @@ func TrimNewLine(value string) (cleanString string) {
 func GetCreds(userRef string, passwordRef string) (string, string) {
 	// get the credentials for the Tastytrade API stored in
 	// 1Password Vault
+    fmt.Printf("userRef: %s\n", userRef)
+
+
 	user_ref, err := exec.Command(op, "read", userRef).Output()
 
 	if err != nil {
@@ -87,15 +91,9 @@ func DisableToken(debug bool) {
     // gets the current session token to pass to the API call to
 	// delete the session token - takes no action on the 1Password item
 
-    currentToken, err := exec.Command(op, "read", sbxVaultToken).Output()
-    token := string(currentToken[:])
-    token = TrimNewLine(token)
+	_, currentToken := GetCreds(sbxVaultUser, sbxVaultToken)
 
-	if err != nil {
-        log.Fatal("can't read secret reference for current token ", err)
-    }
-
-	httpclient.DestroySession(token, debug)
+	httpclient.DestroySession(currentToken, debug)
 }
 
 
