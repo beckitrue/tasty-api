@@ -16,6 +16,18 @@ const (
 	sessionURL = "https://api.cert.tastyworks.com/sessions"
 )
 
+func DebugRequest(req *http.Request) {
+	// print debug messages on the HTTP call
+
+	reqDump, err := httputil.DumpRequestOut(req, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("REQUEST:\n%s", string(reqDump))
+}
+
+
 func DestroySession(token string, debug bool) {
 
 	req, err := http.NewRequest("DELETE", sessionURL, nil)
@@ -31,28 +43,23 @@ func DestroySession(token string, debug bool) {
 
 	// debug http call
 	if debug {
-		reqDump, err := httputil.DumpRequestOut(req, true)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		log.Printf("REQUEST:\n%s", string(reqDump))
+		DebugRequest(req)
 	}
 
 	res, err := client.Do(req)
 
 	if err != nil {
-		log.Fatalf("client: error making http request: %s\n", err)
+		log.Fatalf("Failed response client: error making http request: %s\n", err)
 	}
-
-	log.Printf("client: status code: %d\n", res.StatusCode)
+	
+	// log and quit if we get anything other than a 200 status code
+	if res.StatusCode > 299 {
+	    log.Fatalf("Failed response client status code: %d\n", res.StatusCode)
+	}
 
 }
 
 func GetSessionTokens(login string, password string, debug bool) (session string) {
-
-	// HTTP endpoint
-	// sessionURL := "https://api.cert.tastyworks.com/sessions"
 
 	// JSON body
 	body := []byte(`{
@@ -73,21 +80,19 @@ func GetSessionTokens(login string, password string, debug bool) (session string
 
 	// debug http call
 	if debug {
-		reqDump, err := httputil.DumpRequestOut(req, true)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		log.Printf("REQUEST:\n%s", string(reqDump))
+		DebugRequest(req)
 	}
 
 	res, err := client.Do(req)
 
 	if err != nil {
-		log.Fatalf("client: error making http request: %s\n", err)
+		log.Fatalf("Failed response client: error making http request: %s\n", err)
 	}
-
-	log.Printf("client: status code: %d\n", res.StatusCode)
+    
+	// log and quit if we get anything other than a 200 status code
+	if res.StatusCode > 299 {
+	    log.Fatalf("Failed response client: status code: %d\n", res.StatusCode)
+	}
 
 	resBody, err := io.ReadAll(res.Body)
 

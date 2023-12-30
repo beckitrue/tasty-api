@@ -72,8 +72,12 @@ func ApiCall(token string, requestURL string, request string, debug bool) string
 		log.Fatalf("client: error making http request: %s\n", err)
 	}
 
-	if debug {
+	if (debug) {
 		log.Printf("client: status code: %d\n", res.StatusCode)
+	}
+
+	if res.StatusCode > 299 {
+		log.Fatalf("Failed response client: status code: %d\n", res.StatusCode)
 	}
 
 	resBody, err := io.ReadAll(res.Body)
