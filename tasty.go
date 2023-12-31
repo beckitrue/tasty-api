@@ -21,8 +21,8 @@ const (
 )
 
 // set the prod and debug variables to default values
-var prod bool = false
-var debug bool = false
+var prod bool 
+var debug bool
 
 type ApiMsg struct {
 	method string
@@ -31,6 +31,8 @@ type ApiMsg struct {
 }
 
 func init() {
+
+	prod = false
 
 	cli.AppHelpTemplate = `NAME:
 	{{.Name}} - {{.Usage}}
@@ -51,18 +53,18 @@ func init() {
  VERSION:
 	{{.Version}}
 	{{end}}
- WEBSITE: https://github.com/beckitrue/tasty-api
+ WEBSITE: https://github.com/beckitrue/tasty-api/wiki
  THANK YOU: https://cli.urfave.org/
 `
-	cli.CommandHelpTemplate += "\nWEBSITE: https://github.com/beckitrue/tasty-api\nTHANK YOU: https://cli.urfave.org/\n"
-	cli.SubcommandHelpTemplate += "\nWEBSITE: https://github.com/beckitrue/tasty-api\nTHANK YOU: https://cli.urfave.org/\n"
+	cli.CommandHelpTemplate += "\nWEBSITE: https://github.com/beckitrue/tasty-api/wiki\nTHANK YOU: https://cli.urfave.org/\n"
+	cli.SubcommandHelpTemplate += "\nWEBSITE: https://github.com/beckitrue/tasty-api/wiki\nTHANK YOU: https://cli.urfave.org/\n"
 
 	cli.HelpFlag = &cli.BoolFlag{Name: "help", Aliases: []string{"h"}}
-	cli.VersionFlag = &cli.BoolFlag{Name: "print-version", Aliases: []string{"V"}}
+	cli.VersionFlag = &cli.BoolFlag{Name: "version", Aliases: []string{"V"}}
 
-	// cli.HelpPrinter = func(w io.Writer, templ string, data interface{}) {
-	// 	fmt.Fprintf(w, "best of luck to you\n")
-	// }
+//	cli.HelpPrinter = func(w io.Writer, templ string, data interface{}) {
+//	 	fmt.Fprintf(w, "run tasty-api --help to see the help menu\n")
+//	}
 	cli.VersionPrinter = func(cCtx *cli.Context) {
 		fmt.Fprintf(cCtx.App.Writer, "version=%s\n", cCtx.App.Version)
 	}
@@ -114,7 +116,7 @@ func main() {
 		Copyright: "(c) 2023 Me",
 		HelpName:  "tasty",
 		Usage:     "cli for securely calling the Tastytrade API",
-		UsageText: "tasty- demonstrating the functionality of the API",
+		UsageText: "tasty-api [option] <cmd> [flag]" ,
 		// ArgsUsage: "[]",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
@@ -153,17 +155,18 @@ func main() {
 						Category:           "",
 						DefaultText:        "",
 						FilePath:           "",
-						Usage:              "set this flag if you want to connect to your live account",
+						Usage:              "set this flag if you want to log in to your live account",
 						Required:           false,
 						Hidden:             false,
 						HasBeenSet:         false,
 						Value:              false,
-						Destination:        new(bool),
+						Destination:        &prod,
 						Aliases:            []string{"p"},
 						EnvVars:            []string{},
 						Count:              new(int),
 						DisableDefaultText: false,
 						Action: func(*cli.Context, bool) error {
+							// TODO: write to file
 							prod = true
 							return nil
 						},
@@ -245,35 +248,25 @@ func main() {
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
-			cli.DefaultAppComplete(cCtx)
 			cli.HandleExitCoder(errors.New("not an exit coder, though"))
 			cli.ShowAppHelp(cCtx)
-			cli.ShowCommandCompletions(cCtx, "nope")
-			cli.ShowCommandHelp(cCtx, "also-nope")
-			cli.ShowCompletions(cCtx)
-			cli.ShowSubcommandHelp(cCtx)
 			cli.ShowVersion(cCtx)
 
-			cCtx.App.Setup()
-			fmt.Printf("%#v\n", cCtx.App.VisibleCategories())
-			fmt.Printf("%#v\n", cCtx.App.VisibleCommands())
-			fmt.Printf("%#v\n", cCtx.App.VisibleFlags())
-
-			ec := cli.Exit("ohwell", 86)
+			ec := cli.Exit("You didn't enter a command. Exiting", 86)
 			fmt.Fprintf(cCtx.App.Writer, "%d", ec.ExitCode())
-			fmt.Printf("made it!\n")
+			fmt.Printf(" logged exit code\n")
 			return ec
 		},
 	}
 
-	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
-	}
+	app.Run(os.Args)
 }
 
 func initialLogin(cCtx *cli.Context) error {
 	// gets the session token and writes
 	// it to 1Password
+
+	fmt.Printf("prod value: %t\n", prod)
 
 	login.GetSessionToken(debug)
 
@@ -295,7 +288,8 @@ func checkDebugFlag(cCtx *cli.Context) {
 }
 
 func checkProdFlag(cCtx *cli.Context) {
-	if cCtx.Bool("prod") {
+	
+	if cCtx.Bool("prod")  {
 		fmt.Printf("You are in your live accountt\n")
 	} else {
 		fmt.Printf("You are in your sbx account\n")
@@ -304,6 +298,8 @@ func checkProdFlag(cCtx *cli.Context) {
 
 func Get(cmd ApiMsg) (response string) {
 	_, token := login.GetCreds(sbxVaultUser, sbxVaultToken)
+
+	fmt.Printf("prod value: %t\n", prod)
 
 	url := httpclient.CreateURL("sbx", cmd.msg)
 	respString := httpclient.ApiCall(token, url, cmd.method, debug)

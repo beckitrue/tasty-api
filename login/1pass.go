@@ -17,6 +17,9 @@ const (
 	sbxVaultUser  = "op://SBX/tastytrade-sbx-api/username"
 	sbxVaultToken = "op://SBX/tastytrade-sbx-api/credential"
 	sbxApiItem    = "tastytrade-sbx-api"
+
+	prodVaultUser = "op://Private/Tasty-api/username"
+	prodVaultToken = "op://Private/Tasty-api/credential"
 )
 
 func TrimNewLine(value string) (cleanString string) {
