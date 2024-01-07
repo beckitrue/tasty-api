@@ -5,13 +5,14 @@ import (
 	"github.com/beckitrue/tasty-api/httpclient"
 	"github.com/beckitrue/tasty-api/jsondecode"
 	"github.com/beckitrue/tasty-api/login"
+	"github.com/beckitrue/tasty-api/config"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"time"
-	"encoding/json"
-	"bytes"
+//	"encoding/json"
+//	"bytes"
 
 	"github.com/urfave/cli/v2"
 )
@@ -22,7 +23,7 @@ const (
 	sbxVaultToken = "op://SBX/tastytrade-sbx-api/credential"
 )
 
-// set the debug variables to default value
+// set the debug variable to default value
 var debug bool
 
 type ApiMsg struct {
@@ -255,6 +256,17 @@ func main() {
 	app.Run(os.Args)
 }
 
+//func getEnv() {
+//	var currentData WorkingEnv
+
+//	fmt.Println(currentData)
+
+//	if err := config.GetWorkingData(currentData); err != nil {
+//		log.Fatalln(err)
+//	}
+//	fmt.Println(currentData)
+//}
+
 func setEnv(env string) {
 
 	// check for valid input
@@ -263,48 +275,21 @@ func setEnv(env string) {
 	} else {
 	    fmt.Printf("You are setting your working environment to: %s\n", env)
 
-		settings := WorkingEnv{
+		settings := &WorkingEnv {
 			Environment: env,
 			Account: "1234",
 		}
 
 		// write data to file
-		if err := writeToJSON("/home/becki/environment.json", settings); err != nil {
+		if err := config.WriteToJSON(settings); err != nil {
 			fmt.Println(err)
 		}
+		var currentData WorkingEnv
+		if err := config.GetWorkingData(&currentData); err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Println(currentData)
     }
-}
-
-func writeToJSON(filename string, settings WorkingEnv) error {
-	jsonFile, err := os.Create(filename)
-	if err != nil {
-       return fmt.Errorf("error creating JSON file: %v", err)
-    }
-	defer jsonFile.Close()
-
-	var Marshal = func(v interface{}) (io.Reader, error) {
-		b, err := json.Marshal(settings)
-
-	    if err != nil {
-		    return nil,err
-	    }
-		return bytes.NewReader(b), nil 
-	}
-
-	r, err := Marshal(settings)
-	if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(jsonFile, r)
-
-	
-	// Close file and return any errors
-	if err := jsonFile.Close(); err != nil {
-        return fmt.Errorf("error closing JSON file: %v", err)
-    }
-
-	return err
 }
 
 func initialLogin(cCtx *cli.Context) error {
@@ -318,9 +303,6 @@ func initialLogin(cCtx *cli.Context) error {
 
 func customerLogout(cCtx *cli.Context) error {
 	// disables the user's session token
-
-	login.DisableToken(debug)
-
 	return nil
 }
 
