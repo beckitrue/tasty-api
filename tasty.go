@@ -10,6 +10,8 @@ import (
 	"log"
 	"os"
 	"time"
+	"encoding/json"
+	"bytes"
 
 	"github.com/urfave/cli/v2"
 )
@@ -20,8 +22,7 @@ const (
 	sbxVaultToken = "op://SBX/tastytrade-sbx-api/credential"
 )
 
-// set the prod and debug variables to default values
-var prod bool 
+// set the debug variables to default value
 var debug bool
 
 type ApiMsg struct {
@@ -30,9 +31,12 @@ type ApiMsg struct {
 	model  string
 }
 
-func init() {
+type WorkingEnv struct {
+    Environment string `json:"environment"`
+	Account string `json:account`
+}
 
-	prod = false
+func init() {
 
 	cli.AppHelpTemplate = `NAME:
 	{{.Name}} - {{.Usage}}
@@ -124,7 +128,7 @@ func main() {
 				Category:           "",
 				DefaultText:        "",
 				FilePath:           "",
-				Usage:              "displays additional messaging from HTTP requests and API calls",
+				Usage:              "displays additional messaging from HTTP requests and API calls that can be used to help identify issues",
 				Required:           false,
 				Hidden:             false,
 				HasBeenSet:         false,
@@ -141,37 +145,26 @@ func main() {
 			},
 		},
 		Commands: []*cli.Command{
+			{   Name:        "set-env",
+				Category:    "config",
+				Usage:       "set the environment you want to interact with: sbx or money",
+				UsageText:   "set-env [sbx | money]",
+				Description: "use this command to switch between your sbx and money accounts",
+				ArgsUsage:   "[sbx | money]",
+				Action: func(cCtx *cli.Context) error {
+					env := ((cCtx.Args().Get(0)))
+					setEnv(env)
+					return nil
+				},
+			},
 			{
 				Name:        "login",
 				Aliases:     []string{"l"},
 				Category:    "login",
-				Usage:       "login to get session token",
-				UsageText:   "login --prod for live account (defaults to sbx if flag is unset)",
-				Description: "login to get session token that is good for 24 hours or until you logout",
+				Usage:       "login to get session and remember tokens",
+				UsageText:   "login",
+				Description: "login to environment set using set-env command to get session token that is good for 24 hours or until you logout",
 				ArgsUsage:   "[]",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:               "prod",
-						Category:           "",
-						DefaultText:        "",
-						FilePath:           "",
-						Usage:              "set this flag if you want to log in to your live account",
-						Required:           false,
-						Hidden:             false,
-						HasBeenSet:         false,
-						Value:              false,
-						Destination:        &prod,
-						Aliases:            []string{"p"},
-						EnvVars:            []string{},
-						Count:              new(int),
-						DisableDefaultText: false,
-						Action: func(*cli.Context, bool) error {
-							// TODO: write to file
-							prod = true
-							return nil
-						},
-					},
-				},
 				Action: initialLogin,
 			},
 			{
@@ -188,8 +181,8 @@ func main() {
 				Category:    "customer",
 				Usage:       "returns your customer information",
 				UsageText:   "me [options]",
-				Description: "returns your customer information in your sbx or prod account",
-				ArgsUsage:   "[--prod, --debug ]",
+				Description: "returns your customer information in your sbx or money account",
+				ArgsUsage:   "[]",
 				Action:      customerInfo,
 			},
 			{
@@ -198,7 +191,7 @@ func main() {
 				Category:    "accounts",
 				Usage:       "returns a list of your customer accounts",
 				UsageText:   "accounts [--debug | -d]",
-				Description: "returns a list of your customer accounts in your sbx or prod account",
+				Description: "returns a list of your customer accounts in your sbx or money account",
 				ArgsUsage:   "[]",
 				Action:      getAccounts,
 			},
@@ -262,11 +255,61 @@ func main() {
 	app.Run(os.Args)
 }
 
+func setEnv(env string) {
+
+	// check for valid input
+	if (env != "sbx") && (env != "money") {
+		fmt.Printf("You didn't enter sbx or money. Follow the set-env command with either sbx or money\n")
+	} else {
+	    fmt.Printf("You are setting your working environment to: %s\n", env)
+
+		settings := WorkingEnv{
+			Environment: env,
+			Account: "1234",
+		}
+
+		// write data to file
+		if err := writeToJSON("/home/becki/environment.json", settings); err != nil {
+			fmt.Println(err)
+		}
+    }
+}
+
+func writeToJSON(filename string, settings WorkingEnv) error {
+	jsonFile, err := os.Create(filename)
+	if err != nil {
+       return fmt.Errorf("error creating JSON file: %v", err)
+    }
+	defer jsonFile.Close()
+
+	var Marshal = func(v interface{}) (io.Reader, error) {
+		b, err := json.Marshal(settings)
+
+	    if err != nil {
+		    return nil,err
+	    }
+		return bytes.NewReader(b), nil 
+	}
+
+	r, err := Marshal(settings)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(jsonFile, r)
+
+	
+	// Close file and return any errors
+	if err := jsonFile.Close(); err != nil {
+        return fmt.Errorf("error closing JSON file: %v", err)
+    }
+
+	return err
+}
+
 func initialLogin(cCtx *cli.Context) error {
 	// gets the session token and writes
 	// it to 1Password
-
-	fmt.Printf("prod value: %t\n", prod)
 
 	login.GetSessionToken(debug)
 
@@ -287,19 +330,8 @@ func checkDebugFlag(cCtx *cli.Context) {
 	}
 }
 
-func checkProdFlag(cCtx *cli.Context) {
-	
-	if cCtx.Bool("prod")  {
-		fmt.Printf("You are in your live accountt\n")
-	} else {
-		fmt.Printf("You are in your sbx account\n")
-	}
-}
-
 func Get(cmd ApiMsg) (response string) {
 	_, token := login.GetCreds(sbxVaultUser, sbxVaultToken)
-
-	fmt.Printf("prod value: %t\n", prod)
 
 	url := httpclient.CreateURL("sbx", cmd.msg)
 	respString := httpclient.ApiCall(token, url, cmd.method, debug)
@@ -316,8 +348,6 @@ func customerInfo(cCtx *cli.Context) error {
 	customerMe := ApiMsg{method: "GET", msg: "customers/me", model: "account"}
 	cmd := customerMe
 
-	checkProdFlag(cCtx)
-
 	respString := Get(cmd)
 	jsondecode.PrintMe(respString)
 
@@ -327,8 +357,6 @@ func customerInfo(cCtx *cli.Context) error {
 func getAccounts(cCtx *cli.Context) error {
 	accountList := ApiMsg{method: "GET", msg: "customers/me/accounts", model: "account"}
 	cmd := accountList
-
-	checkProdFlag(cCtx)
 
 	respString := Get(cmd)
 	jsondecode.PrintDataAccounts(respString)
