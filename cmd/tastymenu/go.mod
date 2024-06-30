@@ -1,4 +1,4 @@
-module tasty-api/cmd/tastymenu
+module tastyapi/cmd/tastymenu
 
 go 1.21.4
 
