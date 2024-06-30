@@ -36,7 +36,7 @@ func ApiCall(token string, requestURL string, request string, debug bool) string
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 
 	if err != nil {
-		log.Fatalf("client: could not create request: %s\n", err)
+		log.Printf("client: could not create request: %s\n", err)
 	}
 
 	// set header values
@@ -69,18 +69,22 @@ func ApiCall(token string, requestURL string, request string, debug bool) string
 	res, err := client.Do(req)
 
 	if err != nil {
-		log.Fatalf("client: error making http request: %s\n", err)
+		log.Printf("client: error making http request: %s\n", err)
 	}
 
-	if debug {
+	if (debug) {
 		log.Printf("client: status code: %d\n", res.StatusCode)
+	}
+
+	if res.StatusCode > 299 {
+		log.Printf("Failed response client: status code: %d\n", res.StatusCode)
 	}
 
 	resBody, err := io.ReadAll(res.Body)
 
 	// do some error checking on the response
 	if err != nil {
-		log.Fatalf("client: could not read response body: %s\n", err)
+		log.Printf("client: could not read response body: %s\n", err)
 	}
 
 	if !json.Valid([]byte(resBody)) {

@@ -25,8 +25,9 @@ I'm using 1Password to store my credentials and using the [1Password CLI](https:
 
 | Command | Description |
 | ------- | ----------- |
-|`tasty login [--prod]`| Gets session and remember tokens for environment. Defaults to `sbx` environment unless the `prod` option is set |
+|`tasty login`| Gets session and remember tokens for environment. Defaults to `sbx` environment. Run `tasty set-env money` before runing `tasty login` to interact with your money account |
 | `tasty logout` | Deactivates your session and remember tokens |
+| `tasty set-env [sbx \| money]` | Sets the environment that you'll login to and interact with. The default is `sbx`|
 | `tasty me` | Your customer information |
 | `tasty accounts` | List of your customer accounts |
 | `tasty set-account` | Sets the account id that you want to interact with in subsequent commands
