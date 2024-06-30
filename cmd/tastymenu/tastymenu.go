@@ -1,4 +1,4 @@
-package main
+package tastymenu
 
 import (
 	"errors"
@@ -79,7 +79,7 @@ func (g *genericType) String() string {
 	return g.s
 }
 
-func main() {
+func Menu() {
 
 	var debug bool
 
