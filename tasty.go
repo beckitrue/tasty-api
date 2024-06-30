@@ -2,17 +2,19 @@ package main
 
 import (
 	"errors"
-	"github.com/beckitrue/tasty-api/httpclient"
-	"github.com/beckitrue/tasty-api/jsondecode"
-	"github.com/beckitrue/tasty-api/login"
-	"github.com/beckitrue/tasty-api/config"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"time"
-//	"encoding/json"
-//	"bytes"
+
+	"github.com/beckitrue/tasty-api/config"
+	"github.com/beckitrue/tasty-api/httpclient"
+	"github.com/beckitrue/tasty-api/jsondecode"
+	"github.com/beckitrue/tasty-api/login"
+
+	//	"encoding/json"
+	//	"bytes"
 
 	"github.com/urfave/cli/v2"
 )
@@ -23,7 +25,7 @@ const (
 	sbxVaultToken = "op://SBX/tastytrade-sbx-api/credential"
 )
 
-// set the debug variable to default value
+// set the debug variable to default value - false
 var debug bool
 
 type ApiMsg struct {
@@ -33,8 +35,8 @@ type ApiMsg struct {
 }
 
 type WorkingEnv struct {
-    Environment string `json:"environment"`
-	Account string `json:account`
+	Environment string `json:"environment"`
+	Account     string `json:"account"`
 }
 
 func init() {
@@ -67,9 +69,9 @@ func init() {
 	cli.HelpFlag = &cli.BoolFlag{Name: "help", Aliases: []string{"h"}}
 	cli.VersionFlag = &cli.BoolFlag{Name: "version", Aliases: []string{"V"}}
 
-//	cli.HelpPrinter = func(w io.Writer, templ string, data interface{}) {
-//	 	fmt.Fprintf(w, "run tasty-api --help to see the help menu\n")
-//	}
+	//	cli.HelpPrinter = func(w io.Writer, templ string, data interface{}) {
+	//	 	fmt.Fprintf(w, "run tasty-api --help to see the help menu\n")
+	//	}
 	cli.VersionPrinter = func(cCtx *cli.Context) {
 		fmt.Fprintf(cCtx.App.Writer, "version=%s\n", cCtx.App.Version)
 	}
@@ -121,7 +123,7 @@ func main() {
 		Copyright: "(c) 2023 Me",
 		HelpName:  "tasty",
 		Usage:     "cli for securely calling the Tastytrade API",
-		UsageText: "tasty-api [option] <cmd> [flag]" ,
+		UsageText: "tasty-api [option] <cmd> [flag]",
 		// ArgsUsage: "[]",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
@@ -146,14 +148,14 @@ func main() {
 			},
 		},
 		Commands: []*cli.Command{
-			{   Name:        "set-env",
+			{Name: "set-env",
 				Category:    "config",
 				Usage:       "set the environment you want to interact with: sbx or money",
 				UsageText:   "set-env [sbx | money]",
 				Description: "use this command to switch between your sbx and money accounts",
 				ArgsUsage:   "[sbx | money]",
 				Action: func(cCtx *cli.Context) error {
-					env := ((cCtx.Args().Get(0)))
+					env := (cCtx.Args().Get(0))
 					setEnv(env)
 					return nil
 				},
@@ -166,7 +168,7 @@ func main() {
 				UsageText:   "login",
 				Description: "login to environment set using set-env command to get session token that is good for 24 hours or until you logout",
 				ArgsUsage:   "[]",
-				Action: initialLogin,
+				Action:      initialLogin,
 			},
 			{
 				Name:        "logout",
@@ -256,28 +258,17 @@ func main() {
 	app.Run(os.Args)
 }
 
-//func getEnv() {
-//	var currentData WorkingEnv
-
-//	fmt.Println(currentData)
-
-//	if err := config.GetWorkingData(currentData); err != nil {
-//		log.Fatalln(err)
-//	}
-//	fmt.Println(currentData)
-//}
-
 func setEnv(env string) {
 
 	// check for valid input
 	if (env != "sbx") && (env != "money") {
 		fmt.Printf("You didn't enter sbx or money. Follow the set-env command with either sbx or money\n")
 	} else {
-	    fmt.Printf("You are setting your working environment to: %s\n", env)
+		fmt.Printf("You are setting your working environment to: %s\n", env)
 
-		settings := &WorkingEnv {
+		settings := &WorkingEnv{
 			Environment: env,
-			Account: "1234",
+			Account:     "1234",
 		}
 
 		// write data to file
@@ -289,7 +280,7 @@ func setEnv(env string) {
 			log.Fatalln(err)
 		}
 		fmt.Println(currentData)
-    }
+	}
 }
 
 func initialLogin(cCtx *cli.Context) error {
