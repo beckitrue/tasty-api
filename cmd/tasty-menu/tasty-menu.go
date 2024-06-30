@@ -38,7 +38,7 @@ COPYRIGHT:
 	cli.SubcommandHelpTemplate += "\nWEBSITE: https://github.com/beckitrue/tasty-api/wiki\nTHANK YOU: https://cli.urfave.org/\n"
 
 	cli.HelpFlag = &cli.BoolFlag{Name: "help", Aliases: []string{"h"}}
-	cli.VersionFlag = &cli.BoolFlag{Name: "version", Aliases: []string{"V"}}
+	cli.VersionFlag = &cli.BoolFlag{Name: "version", Aliases: []string{"v"}}
 
 	//	cli.HelpPrinter = func(w io.Writer, templ string, data interface{}) {
 	//	 	fmt.Fprintf(w, "run tasty-api --help to see the help menu\n")
@@ -81,6 +81,8 @@ func (g *genericType) String() string {
 
 func main() {
 
+	var debug bool
+
 	app := &cli.App{
 		Name:     "tasty-menu",
 		Version:  "v1.0",
@@ -94,10 +96,17 @@ func main() {
 		Copyright: "(c) 2023 Me",
 		HelpName:  "tasty-menu",
 		Usage:     "cli for securely calling the Tastytrade API",
-		UsageText: "tasty-menu [option] <cmd> [flag]",
+		UsageText: "tasty-menu [option] <cmd> [args]",
 		// ArgsUsage: "[]",
+		UseShortOptionHandling: true,
 		Flags: []cli.Flag{
-			&cli.BoolFlag{Name: "debug", Aliases: []string{"d"}},
+			&cli.BoolFlag{
+				Name:        "debug",
+				Aliases:     []string{"d"},
+				Value:       false,
+				Usage:       "enable debugging to see more output",
+				Destination: &debug,
+			},
 		},
 		Commands: []*cli.Command{
 			{Name: "set-env",
@@ -107,8 +116,20 @@ func main() {
 				Description: "use this command to switch between your sbx and money accounts",
 				ArgsUsage:   "[sbx | money]",
 				Action: func(cCtx *cli.Context) error {
+					if debug {
+						fmt.Printf("debugging enabled\n")
+					}
 					env := (cCtx.Args().Get(0))
-					fmt.Printf("You are working in the %s environment\n", env)
+					if cCtx.NArg() == 0 {
+						cli.ShowCommandHelp(cCtx, "You need to enter an environment: [sbx or money]")
+					} else {
+						if env != "sbx" && env != "money" {
+							cli.ShowCommandHelp(cCtx, "You need to enter an environment: [sbx or money]")
+						} else {
+							fmt.Printf("You are working in the %s environment\n", env)
+						}
+					}
+
 					return nil
 				},
 			},
@@ -121,6 +142,9 @@ func main() {
 				Description: "login to environment set using set-env command to get session token that is good for 24 hours or until you logout",
 				ArgsUsage:   "[]",
 				Action: func(cCtx *cli.Context) error {
+					if debug {
+						fmt.Printf("debugging enabled\n")
+					}
 					fmt.Fprintf(cCtx.App.Writer, "logging in...\n")
 					return nil
 				},
@@ -131,7 +155,10 @@ func main() {
 				Usage:       "disables your session token",
 				UsageText:   "logout",
 				Description: "disables your session token, logging you out",
-				Action: func(ctx *cli.Context) error {
+				Action: func(cCtx *cli.Context) error {
+					if debug {
+						fmt.Printf("debugging enabled\n")
+					}
 					fmt.Printf("logging out\n")
 					return nil
 				},
@@ -145,6 +172,9 @@ func main() {
 				Description: "returns your customer information in your sbx or money account",
 				ArgsUsage:   "[]",
 				Action: func(cCtx *cli.Context) error {
+					if debug {
+						fmt.Printf("debugging enabled\n")
+					}
 					fmt.Printf("getting your customer information...\n")
 					return nil
 				},
@@ -158,6 +188,9 @@ func main() {
 				Description: "returns a list of your customer accounts in your sbx or money account",
 				ArgsUsage:   "[]",
 				Action: func(cCtx *cli.Context) error {
+					if debug {
+						fmt.Printf("debugging enabled\n")
+					}
 					fmt.Printf("getting your accounts...\n")
 					return nil
 				},
@@ -171,6 +204,9 @@ func main() {
 				Description: "sets the account you want to interact with",
 				ArgsUsage:   "[enter your account id]",
 				Action: func(cCtx *cli.Context) error {
+					if debug {
+						fmt.Printf("debugging enabled\n")
+					}
 					if cCtx.NArg() > 0 {
 						fmt.Printf("Setting account to: %s...\n", cCtx.Args().Get(0))
 					} else {
@@ -188,6 +224,9 @@ func main() {
 				UsageText:   "get-account",
 				Description: "gets the account you set to interact with",
 				Action: func(cCtx *cli.Context) error {
+					if debug {
+						fmt.Printf("debugging enabled\n")
+					}
 					fmt.Printf("We're working with account id: %s\n", cCtx.Args().Get(0))
 					return nil
 					// TODO: error checking on the input
@@ -202,23 +241,30 @@ func main() {
 				Description: "lists the account positions for the account you set to interact with using the set-account command",
 				ArgsUsage:   "[enter your account id]",
 				Action: func(cCtx *cli.Context) error {
+					if debug {
+						fmt.Printf("debugging enabled\n")
+					}
 					fmt.Printf("Getting your positions in account id: %s...\n", cCtx.Args().Get(0))
 					return nil
 					// TODO: error checking on the input
 				},
 			},
 		},
+		CommandNotFound: func(cCtx *cli.Context, command string) {
+			fmt.Fprintf(cCtx.App.Writer, "Command not found: %q\n", command)
+		},
+		OnUsageError: func(cCtx *cli.Context, err error, isSubcommand bool) error {
+			if isSubcommand {
+				return err
+			}
+
+			fmt.Fprintf(cCtx.App.Writer, "WRONG: %#v\n", err)
+			return err
+		},
 		Action: func(cCtx *cli.Context) error {
 			cli.HandleExitCoder(errors.New("not an exit coder, though"))
 			cli.ShowAppHelp(cCtx)
 			cli.ShowVersion(cCtx)
-
-			//set := flag.NewFlagSet("set", 0)
-			//=nc := cli.NewContext(cCtx.App, set, cCtx)
-
-			if cCtx.Bool("debug") {
-				fmt.Fprintf(cCtx.App.Writer, "debugging enabled\n")
-			}
 
 			ec := cli.Exit("You didn't enter a command. Exiting", 86)
 			fmt.Fprintf(cCtx.App.Writer, "%d", ec.ExitCode())
