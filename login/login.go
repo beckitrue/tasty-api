@@ -13,12 +13,12 @@ import (
 const (
 	op = "/usr/bin/op" // path to op
 
-	sbxUserName      = "op://SBX/Tasty_sbx/username"
-	sbxPassword      = "op://SBX/Tasty_sbx/credential"
-	sbxVaultUser     = "op://SBX/tastytrade-sbx-api/username"
-	sbxVaultToken    = "op://SBX/tastytrade-sbx-api/credential"
+	sbxUserName   = "op://SBX/Tasty_sbx/username"
+	sbxPassword   = "op://SBX/Tasty_sbx/credential"
+	sbxVaultUser  = "op://SBX/tastytrade-sbx-api/username"
+	sbxVaultToken = "op://SBX/tastytrade-sbx-api/credential"
 	// sbxRememberToken = "op://SBX/tastytrade-sbx-api/remember-token"
-	sbxApiItem       = "tastytrade-sbx-api"
+	sbxApiItem = "tastytrade-sbx-api"
 
 	prodVaultUser  = "op://Private/Tasty-api/username"
 	prodVaultToken = "op://Private/Tasty-api/credential"
@@ -30,6 +30,21 @@ func TrimNewLine(value string) (cleanString string) {
 
 	return cleanString
 
+}
+
+func GetStoredToken(env string) string {
+	// get the current session token stored in 1Password
+
+	if env == "prod" {
+		_, token := GetCreds(prodVaultUser, prodVaultToken)
+		return token
+	}
+
+	// default to sbx for safety
+
+	_, token := GetCreds(sbxVaultUser, sbxVaultToken)
+
+	return token
 }
 
 func GetCreds(userRef string, passwordRef string) (string, string) {

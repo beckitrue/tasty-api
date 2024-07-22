@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"tastyapi/login"
 )
 
 func CreateURL(env string, endpoint string) (url string) {
@@ -18,19 +19,24 @@ func CreateURL(env string, endpoint string) (url string) {
 	)
 
 	// default to sbx API endpoint for safety
-	baseURL := sbxURL
+	url = sbxURL
 
 	if env == "prod" {
-		baseURL = prodURL
+		url = prodURL
 	}
 
-	baseURL += endpoint
+	url += endpoint
 
-	return baseURL
+	return url
 
 }
 
-func ApiCall(token string, requestURL string, request string, debug bool) string {
+func ApiCall(requestURL string, request string, debug bool) string {
+    // set env for testing
+    env := "sbx"
+
+	// Get session or remember me token
+	token := login.GetStoredToken(env)
 
 	// TODO: logic for Method selection based on func input params
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
@@ -72,7 +78,7 @@ func ApiCall(token string, requestURL string, request string, debug bool) string
 		log.Printf("client: error making http request: %s\n", err)
 	}
 
-	if (debug) {
+	if debug {
 		log.Printf("client: status code: %d\n", res.StatusCode)
 	}
 
