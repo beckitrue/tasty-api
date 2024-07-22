@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"tastyapi/accounts"
 	"tastyapi/login"
 	"time"
 
@@ -178,7 +179,7 @@ func main() {
 						fmt.Printf("debugging enabled\n")
 					}
 					fmt.Printf("getting your customer information...\n")
-					return nil
+					return accounts.GetCustomerInfo()
 				},
 			},
 			{
