@@ -1,24 +1,26 @@
 package login
 
 import (
-	"github.com/beckitrue/tasty-api/httpclient"
+	"fmt"
 	"log"
 	"os/exec"
 	"strings"
-	"fmt"
+
+	"github.com/beckitrue/tasty-api/httpclient"
 )
 
 // 1 Password secret references
 const (
-	op = "/usr/bin/op"    // path to op 
+	op = "/usr/bin/op" // path to op
 
-	sbxUserName   = "op://SBX/Tasty_sbx/username"
-	sbxPassword   = "op://SBX/Tasty_sbx/credential"
-	sbxVaultUser  = "op://SBX/tastytrade-sbx-api/username"
-	sbxVaultToken = "op://SBX/tastytrade-sbx-api/credential"
-	sbxApiItem    = "tastytrade-sbx-api"
+	sbxUserName      = "op://SBX/Tasty_sbx/username"
+	sbxPassword      = "op://SBX/Tasty_sbx/credential"
+	sbxVaultUser     = "op://SBX/tastytrade-sbx-api/username"
+	sbxVaultToken    = "op://SBX/tastytrade-sbx-api/credential"
+	// sbxRememberToken = "op://SBX/tastytrade-sbx-api/remember-token"
+	sbxApiItem       = "tastytrade-sbx-api"
 
-	prodVaultUser = "op://Private/Tasty-api/username"
+	prodVaultUser  = "op://Private/Tasty-api/username"
 	prodVaultToken = "op://Private/Tasty-api/credential"
 )
 
@@ -81,7 +83,7 @@ func GetSessionToken(debug bool) {
 	sessionToken := httpclient.GetSessionTokens(login, password, debug)
 
 	if debug {
-	    fmt.Printf("session token: %s", sessionToken)
+		fmt.Printf("session token: %s", sessionToken)
 	}
 
 	// write session token to 1Password
@@ -89,12 +91,10 @@ func GetSessionToken(debug bool) {
 }
 
 func DisableToken(debug bool) {
-    // gets the current session token to pass to the API call to
+	// gets the current session token to pass to the API call to
 	// delete the session token - takes no action on the 1Password item
 
 	_, currentToken := GetCreds(sbxVaultUser, sbxVaultToken)
 
 	httpclient.DestroySession(currentToken, debug)
 }
-
-

@@ -14,4 +14,4 @@ require (
 	github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913 // indirect
 )
 
-replace github.com/becktrue/tastyapi/cmd/tastymenu => ./cmd/tastymenu/
+replace github.com/beckitrue/tastyapi/cmd/tastymenu => ./cmd/tastymenu
